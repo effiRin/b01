@@ -3,6 +3,7 @@ package org.zerock.b01.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -66,7 +67,7 @@ public class BoardController {
     }
 
 
-
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/register")
     public void registerGET(){
 
@@ -106,6 +107,7 @@ public class BoardController {
 //    }
 
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping({"/read", "/modify"})
     public void read(Long bno, PageRequestDTO pageRequestDTO, Model model){
 
@@ -117,6 +119,7 @@ public class BoardController {
 
     }
 
+    @PreAuthorize("principal.username == #boardDTO.writer")  // board의 사용자와 일치해야한다는 것
     @PostMapping("/modify")
     public String modify( @Valid BoardDTO boardDTO,
                           BindingResult bindingResult,
@@ -146,9 +149,9 @@ public class BoardController {
         return "redirect:/board/read";
     }
 
-
+    @PreAuthorize("principal.username == #writer")
     @PostMapping("/remove")
-    public String remove(Long bno, RedirectAttributes redirectAttributes) {
+    public String remove(Long bno, String writer, RedirectAttributes redirectAttributes) {
 
         log.info("remove post.. " + bno);
 
