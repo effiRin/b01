@@ -8,9 +8,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
@@ -19,11 +22,12 @@ import org.zerock.b01.security.handler.Custom403Handler;
 
 import javax.sql.DataSource;
 
+@EnableWebSecurity
 @RequiredArgsConstructor
 @Configuration
 @Log4j2
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-public class CustomSecurityConfig extends WebSecurityConfigurerAdapter {
+public class CustomSecurityConfig  {
     // deprecated -> 스프링과 시큐리티는 버전이 다름
 
     private final DataSource dataSource;
@@ -34,8 +38,11 @@ public class CustomSecurityConfig extends WebSecurityConfigurerAdapter {
         return new BCryptPasswordEncoder();
     }
 
-    @Override  // generator를 통해서 override method 추가
-    protected void configure(HttpSecurity http) throws Exception {
+//    @Override  // generator를 통해서 override method 추가
+//    protected void configure(HttpSecurity http) throws Exception {   이거 대신에 filterChain 추가
+
+    @Bean
+    public SecurityFilterChain filterChain(final HttpSecurity http) throws Exception {
         log.info("-----------------------");
         http.formLogin().loginPage("/member/login");
 
@@ -51,6 +58,9 @@ public class CustomSecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.exceptionHandling().accessDeniedHandler(accessDeniedHandler()); // bean으로 추가
 
+        http.oauth2Login(); // 카카오 로그인
+
+        return http.build();
     }
 
     @Bean
@@ -58,14 +68,22 @@ public class CustomSecurityConfig extends WebSecurityConfigurerAdapter {
         return new Custom403Handler();
     }
 
-    @Override
-    public void configure(WebSecurity web) throws Exception {
+//    @Override
+//    public void configure(WebSecurity web) throws Exception {
+//
+//        log.info("------------web configure-------------------");
+//
+//        web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
+//        // PathRequest import할때 servlet 있는 걸로
+//
+//    } // 이거 지우고 webSecurityCustomizer 추가
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
 
         log.info("------------web configure-------------------");
 
-        web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
-        // PathRequest import할때 servlet 있는 걸로
-
+        return (web) -> web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
     }
 
     @Bean
