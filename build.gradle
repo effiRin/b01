@@ -12,7 +12,7 @@ plugins {
     id 'java'
 }
 
-group = 'org.zerock'
+group = 'org.effirin'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
 
